@@ -87,7 +87,7 @@ def feature_2(output):
     """
     count = np.bincount(data['resource'], weights=data['size'])
     most_numbers = np.partition(count, len(count) - 10)[-10:]
-    pprint(most_numbers)
+    # pprint(most_numbers)
     resources = []
     for each_number in most_numbers:
         temp = np.argwhere((count == each_number))
