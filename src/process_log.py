@@ -180,16 +180,16 @@ def read_log(file):
 if __name__ == '__main__':
     print('running')
 
-    input_file = '../log_input/test100.txt'
+    input_file = './log_input/test100.txt'
     read_log(input_file)
     # pprint(data)
     # pprint(reference)
 
     # solution 1
-    feature_1('../log_output/hosts.txt')
+    feature_1('./log_output/hosts.txt')
     # solution 2
-    feature_2('../log_output/resources.txt')
+    feature_2('./log_output/resources.txt')
     # solution 3
-    feature_3('../log_output/hours.txt')
+    feature_3('./log_output/hours.txt')
 
 
