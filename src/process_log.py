@@ -1,13 +1,17 @@
 """
-utilities
+process data
 """
 from pprint import pprint
+from time import time
 import numpy as np
 import arrow
 import bottleneck as bn
 
 keys = ['ip', 'resource', 'status']
-reference = dict.fromkeys(keys)
+# reference dict
+reference = {'ip': {}, 'resource': {}, 'status': {}}
+# inverse reference dict
+inv_reference = {'ip': {}, 'resource': {}, 'status': {}}
 data = dict.fromkeys(keys)
 
 
@@ -23,30 +27,14 @@ def rules(char):
         return True
 
 
-def convert(str_arr):
-    """
-    convert string array to int array
-    :param str_arr: array
-    :return:
-    """
-    for index, key in enumerate(keys):
-        row = str_arr[:, index]
-        key_set = set(row)
-        key_dic = {i+1: el for i, el in enumerate(key_set)}
-        for k, value in key_dic.items():
-            row[row == value] = k
-        data[key] = row.astype(int)
-        reference[key] = key_dic
-
-
 def convert_time(str_arr):
     """
-    convert time to timestamp
+    convert date_time to timestamp
     :param str_arr:
     :return:
     """
-    time = np.array(list(map(lambda el: arrow.get(el, 'DD/MMM/YYYY:HH:mm:ss').timestamp, str_arr)))
-    data['time'] = time
+    date_time = np.array(list(map(lambda el: arrow.get(el, 'DD/MMM/YYYY:HH:mm:ss').timestamp, str_arr)))
+    data['time'] = date_time
 
 
 def feature_1(output):
@@ -75,7 +63,7 @@ def feature_1(output):
     ips = ips[:10]
     with open(output, 'w') as f:
         for i in range(len(ips)):
-            line = reference['ip'][ips[i]] + ', ' + str(n_ips[i]) + '\n'
+            line = reference['ip'][str(ips[i])] + ', ' + str(n_ips[i]) + '\n'
             f.write(line)
 
 
@@ -105,7 +93,7 @@ def feature_2(output):
     resources = resources[:10]
     with open(output, 'w') as f:
         for i in range(len(resources)):
-            line = reference['resource'][resources[i]] + '\n'
+            line = reference['resource'][str(resources[i])] + '\n'
             f.write(line)
 
 
@@ -140,8 +128,8 @@ def feature_3(output):
     resources = resources[arg_sort]
     time_format = []
     for i in resources:
-        time = arrow.get(i + start)
-        time_format.append(time.format(fmt='DD/MMM/YYYY:HH:mm:ss'))
+        date_time = arrow.get(i + start)
+        time_format.append(date_time.format(fmt='DD/MMM/YYYY:HH:mm:ss'))
 
     time_format = time_format[:10]
     n_resources = n_resources[:10]
@@ -156,7 +144,7 @@ def read_log(file):
     """
 
     :param file: input file path
-    :return: list of: ip, time, resource, status, size
+    :return: list of: ip, date_time, resource, status, size
     """
     with open(file, encoding="ISO-8859-1") as f:
         result = []
@@ -165,31 +153,57 @@ def read_log(file):
             row = line.split()
             if len(row) != 8:
                 continue
-            # if row[2] != '0400':
-            #    print(row)
+            if row[0] not in inv_reference['ip']:
+                inv_reference['ip'][row[0]] = len(inv_reference['ip'])
+                reference['ip'][str(len(reference['ip']))] = row[0]
+            if row[4] not in inv_reference['resource']:
+                inv_reference['resource'][row[4]] = len(inv_reference['resource'])
+                reference['resource'][str(len(reference['resource']))] = row[4]
+            if row[6] not in inv_reference['status']:
+                inv_reference['status'][row[6]] = len(inv_reference['status'])
+                reference['status'][str(len(reference['status']))] = row[6]
+            row[0] = inv_reference['ip'][row[0]]
+            row[4] = inv_reference['resource'][row[4]]
+            row[6] = inv_reference['status'][row[6]]
             result.append(row)
         result = np.array(result)
-        time = result[:, 1]
+        # pprint(result.shape)
+        date_time = result[:, 1]
         data['size'] = result[:, 7].astype(int)
-        result = np.delete(result, [1, 2, 3, 5, 7], 1)
-        # pprint(result)
-        convert(result)
-        convert_time(time)
+        data['ip'] = result[:, 0].astype(int)
+        data['resource'] = result[:, 4].astype(int)
+        data['status'] = result[:, 6].astype(int)
+        convert_time(date_time)
 
 
 if __name__ == '__main__':
     print('running')
 
-    input_file = './log_input/test100.txt'
+    start = time()
+    input_file = './log_input/test10000.txt'
+    print('reading log.txt, it may take several minutes, pls be patient....')
     read_log(input_file)
+    end = time()
+    print('time for read log:', end - start)
     # pprint(data)
     # pprint(reference)
 
     # solution 1
+    start = time()
     feature_1('./log_output/hosts.txt')
+    end = time()
+    print('time for feature 1:', end - start)
     # solution 2
+    start = time()
     feature_2('./log_output/resources.txt')
+    end = time()
+    print('time for feature 2:', end - start)
     # solution 3
+    start = time()
     feature_3('./log_output/hours.txt')
+    end = time()
+    print('time for feature 3:', end - start)
+
+
 
 

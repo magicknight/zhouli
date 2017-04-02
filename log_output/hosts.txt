@@ -1,1 +1,10 @@
-Output for Feature 1 would go here
+pcmas.it.bton.ac.uk, 355
+163.205.46.54, 114
+internet.datalytics.com, 103
+204.239.240.126, 98
+128.159.77.122, 96
+athena.capital.edu, 94
+graphor.hip.cam.org, 92
+163.205.156.16, 92
+128.159.122.110, 84
+gateway.amoco.com, 76

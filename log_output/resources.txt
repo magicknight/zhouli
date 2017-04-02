@@ -1,1 +1,10 @@
-Output for Feature 2 would go here
+/
+/shuttle/missions/sts53/movies/sts53launch.mpg
+/shuttle/missions/sts71/movies/sts71launch.mpg
+/shuttle/missions/sts71/movies/sts71tcdtcrewwalkout.mpg
+/shuttle/countdown/count70.gif
+/shuttle/technology/stsnewsref/stsreftoc.html
+/shuttle/missions/sts71/movies/sts71mirdock.mpg
+/shuttle/missions/sts66/missionsts66.html
+/shuttle/technology/stsnewsref/sts_asm.html
+/shuttle/technology/images/srb_mod_compare_3small.gif
