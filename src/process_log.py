@@ -108,9 +108,9 @@ def feature_3(output):
     # pprint(times)
     counts = np.bincount(times)
     # pprint(counts)
-    moving_sum = bn.move_sum(counts, window=60, axis=0)
-    moving_sum = np.delete(moving_sum, range(0, 59))
-    moving_sum = np.append(moving_sum, np.zeros(60))
+    moving_sum = bn.move_sum(counts, window=3600, axis=0)
+    moving_sum = np.delete(moving_sum, range(0, 3599))
+    moving_sum = np.append(moving_sum, np.zeros(3600))
     most_numbers = np.partition(moving_sum, len(moving_sum) - 10)[-10:]
     resources = []
     for each_number in most_numbers:
@@ -180,7 +180,7 @@ if __name__ == '__main__':
     print('running')
 
     start = time()
-    input_file = './log_input/test10000.txt'
+    input_file = './log_input/test100000.txt'
     print('reading log.txt, it may take several minutes, pls be patient....')
     read_log(input_file)
     end = time()
