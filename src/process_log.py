@@ -7,7 +7,7 @@ import numpy as np
 import arrow
 import bottleneck as bn
 
-keys = ['ip', 'resource', 'status']
+keys = ['ip', 'time', 'timezone', 'protocol', 'resource', 'http', 'status', 'size']
 # reference dict
 reference = {'ip': {}, 'resource': {}, 'status': {}}
 # inverse reference dict
@@ -63,7 +63,7 @@ def feature_1(output):
     ips = ips[:10]
     with open(output, 'w') as f:
         for i in range(len(ips)):
-            line = reference['ip'][str(ips[i])] + ', ' + str(n_ips[i]) + '\n'
+            line = reference['ip'][ips[i]] + ', ' + str(n_ips[i]) + '\n'
             f.write(line)
 
 
@@ -93,7 +93,7 @@ def feature_2(output):
     resources = resources[:10]
     with open(output, 'w') as f:
         for i in range(len(resources)):
-            line = reference['resource'][str(resources[i])] + '\n'
+            line = reference['resource'][resources[i]] + '\n'
             f.write(line)
 
 
@@ -140,11 +140,52 @@ def feature_3(output):
             f.write(line)
 
 
+def feature_4(output):
+    """
+    feature 4
+    :param output:
+    :return:
+    """
+    out_text = []
+    block_dict = {}
+    failed_dict = {}
+    login = inv_reference['resource']['/login']
+    success = inv_reference['status']['200']
+    for i in range(len(data['ip'])):
+        ip = data['ip'][i]
+        if ip in block_dict:
+            if data['time'][i] - block_dict[ip] < 300:
+                line = reference['ip'][ip] \
+                       + ' - - [' + arrow.get(data['time'][i]).format(fmt='DD/MMM/YYYY:HH:mm:ss') + ' '\
+                       + data['timezone'][i] + '] "' \
+                       + data['protocol'][i] + ' ' \
+                       + reference['resource'][data['resource'][i]] + ' ' \
+                       + data['http'][i] + '" ' + reference['status'][data['status'][i]] + ' ' + str(data['size'][i]) \
+                       + '\n'
+                out_text.append(line)
+                continue
+            else:
+                block_dict.pop(ip, None)
+        if data['resource'][i] == login and data['status'][i] != success:
+            # print('ip', reference['ip'][ip], 'failed')
+            if ip in failed_dict:
+                failed_dict[ip] += 1
+            else:
+                failed_dict[ip] = 1
+            if failed_dict[ip] == 3:
+                failed_dict.pop(ip, None)
+                block_dict[ip] = data['time'][i]
+    # write
+    with open(output, 'w') as f:
+        for line in out_text:
+            f.write(line)
+
+
 def read_log(file):
     """
 
     :param file: input file path
-    :return: list of: ip, date_time, resource, status, size
+    :return:
     """
     with open(file, encoding="ISO-8859-1") as f:
         result = []
@@ -155,13 +196,13 @@ def read_log(file):
                 continue
             if row[0] not in inv_reference['ip']:
                 inv_reference['ip'][row[0]] = len(inv_reference['ip'])
-                reference['ip'][str(len(reference['ip']))] = row[0]
+                reference['ip'][len(reference['ip'])] = row[0]
             if row[4] not in inv_reference['resource']:
                 inv_reference['resource'][row[4]] = len(inv_reference['resource'])
-                reference['resource'][str(len(reference['resource']))] = row[4]
+                reference['resource'][len(reference['resource'])] = row[4]
             if row[6] not in inv_reference['status']:
                 inv_reference['status'][row[6]] = len(inv_reference['status'])
-                reference['status'][str(len(reference['status']))] = row[6]
+                reference['status'][len(reference['status'])] = row[6]
             row[0] = inv_reference['ip'][row[0]]
             row[4] = inv_reference['resource'][row[4]]
             row[6] = inv_reference['status'][row[6]]
@@ -169,10 +210,13 @@ def read_log(file):
         result = np.array(result)
         # pprint(result.shape)
         date_time = result[:, 1]
-        data['size'] = result[:, 7].astype(int)
         data['ip'] = result[:, 0].astype(int)
+        data['timezone'] = result[:, 2]
+        data['protocol'] = result[:, 3]
         data['resource'] = result[:, 4].astype(int)
+        data['http'] = result[:, 5]
         data['status'] = result[:, 6].astype(int)
+        data['size'] = result[:, 7].astype(int)
         convert_time(date_time)
 
 
@@ -180,13 +224,14 @@ if __name__ == '__main__':
     print('running')
 
     start = time()
-    input_file = './log_input/test100000.txt'
+    input_file = './log_input/log.txt'
     print('reading log.txt, it may take several minutes, pls be patient....')
     read_log(input_file)
     end = time()
     print('time for read log:', end - start)
     # pprint(data)
     # pprint(reference)
+    # pprint(inv_reference)
 
     # solution 1
     start = time()
@@ -203,7 +248,11 @@ if __name__ == '__main__':
     feature_3('./log_output/hours.txt')
     end = time()
     print('time for feature 3:', end - start)
-
+    # solution 4
+    start = time()
+    feature_4('./log_output/blocked.txt')
+    end = time()
+    print('time for feature 4:', end - start)
 
 
 
