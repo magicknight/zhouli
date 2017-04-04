@@ -156,7 +156,7 @@ def feature_4(output):
         if ip in block_dict:
             if data['time'][i] - block_dict[ip] < 300:
                 line = reference['ip'][ip] \
-                       + ' - - [' + arrow.get(data['time'][i]).format(fmt='DD/MMM/YYYY:HH:mm:ss') + ' '\
+                       + ' - - [' + arrow.get(data['time'][i]).format(fmt='DD/MMM/YYYY:HH:mm:ss') + ' -'\
                        + data['timezone'][i] + '] "' \
                        + data['protocol'][i] + ' ' \
                        + reference['resource'][data['resource'][i]] + ' ' \
@@ -169,12 +169,56 @@ def feature_4(output):
         if data['resource'][i] == login and data['status'][i] != success:
             # print('ip', reference['ip'][ip], 'failed')
             if ip in failed_dict:
-                failed_dict[ip] += 1
+                for each_time in failed_dict[ip]:
+                    if data['time'][i] - each_time > 20:
+                        failed_dict[ip].remove(each_time)
+                failed_dict[ip].append(data['time'][i])
             else:
-                failed_dict[ip] = 1
-            if failed_dict[ip] == 3:
+                failed_dict[ip] = [data['time'][i]]
+            if len(failed_dict[ip]) == 3:
                 failed_dict.pop(ip, None)
                 block_dict[ip] = data['time'][i]
+    # write
+    with open(output, 'w') as f:
+        for line in out_text:
+            f.write(line)
+
+
+def feature_5(output):
+    """
+    feature 5
+    :param output:
+    :return:
+    """
+    out_text = []
+    block_dict = {}
+    failed_dict = {}
+    for i in range(len(data['ip'])):
+        ip = data['ip'][i]
+        if ip in block_dict:
+            if data['time'][i] - block_dict[ip] < 300:
+                line = reference['ip'][ip] \
+                       + ' - - [' + arrow.get(data['time'][i]).format(fmt='DD/MMM/YYYY:HH:mm:ss') + ' -'\
+                       + data['timezone'][i] + '] "' \
+                       + data['protocol'][i] + ' ' \
+                       + reference['resource'][data['resource'][i]] + ' ' \
+                       + data['http'][i] + '" ' + reference['status'][data['status'][i]] + ' ' + str(data['size'][i]) \
+                       + '\n'
+                out_text.append(line)
+                continue
+            else:
+                block_dict.pop(ip, None)
+        # print('ip', reference['ip'][ip], 'failed')
+        if ip in failed_dict:
+            for each_time in failed_dict[ip]:
+                if data['time'][i] - each_time > 10:
+                    failed_dict[ip].remove(each_time)
+            failed_dict[ip].append(data['time'][i])
+        else:
+            failed_dict[ip] = [data['time'][i]]
+        if len(failed_dict[ip]) == 10:
+            failed_dict.pop(ip, None)
+            block_dict[ip] = data['time'][i]
     # write
     with open(output, 'w') as f:
         for line in out_text:
@@ -253,6 +297,11 @@ if __name__ == '__main__':
     feature_4('./log_output/blocked.txt')
     end = time()
     print('time for feature 4:', end - start)
+    # solution 5
+    start = time()
+    feature_5('./log_output/DoS.txt')
+    end = time()
+    print('time for feature 5:', end - start)
 
 
 
