@@ -63,7 +63,7 @@ def feature_1(output):
     ips = ips[:10]
     with open(output, 'w') as f:
         for i in range(len(ips)):
-            line = reference['ip'][ips[i]] + ', ' + str(n_ips[i]) + '\n'
+            line = reference['ip'][ips[i]] + ',' + str(n_ips[i]) + '\n'
             f.write(line)
 
 
@@ -136,7 +136,7 @@ def feature_3(output):
 
     with open(output, 'w') as f:
         for i in range(len(time_format)):
-            line = time_format[i] + ' 0400, ' + str(n_resources[i]) + '\n'
+            line = time_format[i] + ' -0400,' + str(n_resources[i]) + '\n'
             f.write(line)
 
 
