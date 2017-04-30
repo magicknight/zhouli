@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 from random import shuffle, choice
 from itertools import combinations, permutations
 from math import sqrt
@@ -32,7 +33,6 @@ def di_deviation(n=10):
 
 
 def di_probability(avg, div, num):
-    print(num)
     return norm(avg, div).cdf(num)
 
 
