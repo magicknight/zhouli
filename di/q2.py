@@ -8,10 +8,11 @@ from pprint import pprint
 data_path = '/home/zhihua/work/zhouli/data/CollegeScorecard_Raw_Data/'
 key_list = ['SAT_AVG', 'UGDS', 'ENRL_ORIG_YR2_RT', 'LO_INC_COMP_ORIG_YR4_RT', 'HI_INC_COMP_ORIG_YR4_RT', 'UGDS_WOMEN']
 key_race = [ 'UGDS_WHITE', 'UGDS_BLACK', 'UGDS_HISP', 'UGDS_ASIAN', 'UGDS_AIAN', 'UGDS_NHPI', 'UGDS_2MOR', 'UGDS_NRA', 'UGDS_UNKN', 'UGDS_WHITENH', 'UGDS_BLACKNH',
-             'UGDS_API', 'UGDS_AIANOLD', 'UGDS_HISPOLD']
+             'UGDS_API', 'UGDS_AIANOLD', 'UGDS_HISPOLD', 'REGION', 'LOCALE']
 ten_year_files = ['MERGED2001_02_PP.csv', 'MERGED2002_03_PP.csv', 'MERGED2003_04_PP.csv', 'MERGED2004_05_PP.csv', 'MERGED2005_06_PP.csv',
                   'MERGED2006_07_PP.csv', 'MERGED2007_08_PP.csv', 'MERGED2008_09_PP.csv', 'MERGED2009_10_PP.csv', 'MERGED2010_11_PP.csv', ]
 void_label = ['NULL', 'PrivacySuppressed', '0']
+city_labels = ['11', '12', '13']
 
 
 def read_in_dict(path):
@@ -117,6 +118,23 @@ def women():
     return average_women
 
 
+def location(input_data):
+    regions = {}
+    for each_school in input_data:
+        if each_school['REGION'] not in regions:
+            regions[each_school['REGION']] = {
+                'city': 0,
+                'non-city': 0
+            }
+        if each_school['LOCALE'] in city_labels:
+            regions[each_school['REGION']]['city'] += 1
+        else:
+            regions[each_school['REGION']]['non-city'] += 1
+    probabilities = []
+    for each_region in regions.values():
+        probabilities.append(each_region['city'] / (each_region['non-city'] + each_region['city']))
+    return max(probabilities)
+
 if __name__ == '__main__':
     data = read_in(data_path + 'MERGED2013_14_PP.csv')
     sat = average_sat(data)
@@ -138,6 +156,9 @@ if __name__ == '__main__':
     average_women_share = women()
     print(average_women_share)
 
+    data_latest = read_in(data_path + 'MERGED2014_15_PP.csv')
+    city_probability = location(data_latest)
+    print(city_probability)
 
 
 
